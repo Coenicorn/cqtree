@@ -16,6 +16,7 @@ Love you!
 
 */
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "qtree.h"
 #include "aabb.h"
@@ -33,7 +34,7 @@ QTree *newQTree(AABB bounds, int maxEntries)
 	out->maxEntries = maxEntries;
 	out->numEntries = out->subdivided = 0;
 	out->bounds = bounds;
-	out->entries = malloc(sizeof(AABB *) * maxEntries);
+	out->entries = calloc(maxEntries, sizeof(AABB *));
 
 	return out;
 }
@@ -75,34 +76,31 @@ void QTreeAdd(QTree *q, AABB *entry)
 	if (!AABBoverlaps(&q->bounds, entry))
 		return;
 
-	// check if the entry fits inside the QTree
-	// array index = human index - 1
-	if (q->numEntries >= q->maxEntries)
+	if (q->numEntries < q->maxEntries)
 	{
-		// if not subdivided, subdivide
-		if (!q->subdivided)
-		{
-			QTreeSubdivide(q);
-		}
-
-		// try to insert in all children
-		for (int i = 0; i < 4; i++)
-		{
-			QTreeAdd(q->children[i], entry);
-		}
-
+		// insert into this QTree
+		q->entries[q->numEntries++] = entry;
 		return;
 	}
 
-	// insert into this QTree
-	q->entries[q->numEntries++] = entry;
+	// if not subdivided, subdivide
+	if (!q->subdivided)
+	{
+		QTreeSubdivide(q);
+	}
+
+	// try to insert in all children
+	for (int i = 0; i < 4; i++)
+	{
+		QTreeAdd(q->children[i], entry);
+	}
 }
 
 void QTreeQuery(QTree *q, AABB range, AABB *out[], int *l, int maxLen)
 {
 	if (*l >= maxLen)
-			return;
-			
+		return;
+
 	// check if the bounds overlap with QTree
 	if (!AABBoverlaps(&q->bounds, &range))
 		return;
