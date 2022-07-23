@@ -19,7 +19,7 @@ RM := rm -rf
 
 build: $(OBJS)
 	$(CC) $^ $(CFLAGS) $(LFLAGS) -o $(EXEC) $(LDFLAGS)
-	# $(MAKE) clean
+	$(MAKE) clean
 
 clean:
 	sudo $(RM) $(SRCDIR)/*.o
