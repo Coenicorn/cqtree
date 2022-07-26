@@ -17,7 +17,7 @@ Ennjoy!
 #define W_WIDTH 500
 #define W_HEGIHT 500
 
-#define NUM_ENTITIES 5000
+#define NUM_ENTITIES 3000
 
 // change this to see effect of qtree
 #define USEQTREE 1
@@ -79,10 +79,10 @@ void update(QTree *tree)
 
         if (USEQTREE){
             int len = 0;
-            AABB *a[100];
+            AABB *a[20];
 
             // query tree with aabb slightly larger than the entity to get all potential collision cases
-            QTreeQuery(tree, (AABB){e->bounds.x-5, e->bounds.y-5, e->bounds.w+10, e->bounds.h+10}, a, &len, 100);
+            QTreeQuery(tree, (AABB){e->bounds.x-5, e->bounds.y-5, e->bounds.w+10, e->bounds.h+10}, a, &len, 20);
 
             for (int j = 0; j < len; j++)
             {
@@ -105,9 +105,11 @@ void update(QTree *tree)
         {
             for (int j = 0; j < NUM_ENTITIES; j++)
             {
+                // Check if the entity isn't colliding with itself
                 if (i == j)
                     continue;
 
+                // Brute force collision detection with every other entity
                 if (AABBoverlaps(&entities[i].bounds, &entities[j].bounds))
                 {
                     e->isColliding = 1;
@@ -164,10 +166,12 @@ int main()
             // entities that are colliding are green, those that are not are black
             Color c = BLACK;
             if (e->isColliding)
-                c = GREEN;
+                c = RED;
             
             DrawRectangle(e->bounds.x, e->bounds.y, e->bounds.w, e->bounds.h, c);
         }
+
+        DrawFPS(0, 0);
 
         EndDrawing();
     }

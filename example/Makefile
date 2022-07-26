@@ -5,9 +5,9 @@ SRCDIR := ./src
 BINDIR := ./bin
 LIBDIR := ./lib
 
-CFLAGS := -Wall -g -I$(SRCDIR)/ -I$(LIBDIR)/ -O4
+CFLAGS := -Wall -g -I$(SRCDIR)/ -I$(LIBDIR)/
 LFLAGS := -L$(SRCDIR)/ -L$(BINDIR)/
-LDFLAGS := -lqtree -lraylib -lm -lGL -lm -lpthread -ldl -lrt
+LDFLAGS := -lqtree -lraylib -lm -lGL -lpthread -ldl
 
 SRCS := $(wildcard $(SRCDIR)/*.c)
 OBJS := $(SRCS:.c=.o)
