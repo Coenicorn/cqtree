@@ -1,4 +1,4 @@
-build/*
+build/
 src/main.c
 .vscode
-example/build/*
+example/build/
