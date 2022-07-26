@@ -12,6 +12,7 @@ Ennjoy!
 #include <raylib.h>
 #include <qtree.h>
 #include <stdlib.h>
+#include <time.h>
 
 // Window dimensions
 #define W_WIDTH 500
@@ -30,8 +31,10 @@ typedef struct Entity
     int isColliding;
 } Entity;
 
+// global entities array, I know global variables are evil but I'm lazy
 Entity *entities;
 
+// random value between a and b
 float randrange(float a, float b)
 {
     float diff = b - a;
@@ -122,6 +125,8 @@ void update(QTree *tree)
 
 int main()
 {
+    srand((unsigned int)clock());
+
     // Initialize entities array with aabb's with random positions
     entities = calloc(NUM_ENTITIES, sizeof(Entity));
     for (int i = 0; i < NUM_ENTITIES; i++)
@@ -178,7 +183,7 @@ int main()
 
     CloseWindow();
 
-    // Every malloc/calloc should have a free call
+    // In contrary to your dad, we ARE being safe
     free(entities);
 
     return 0;
