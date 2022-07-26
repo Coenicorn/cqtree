@@ -20,11 +20,3 @@ To run:
 ```
 build/main.out
 ```
-
-**Note: To build there needs to be a directory "build" present in (...)/cqtree, this isn't included in github so you'll need to create that, either through running:**
-
-```
-mkdir build
-```
-
-**in dir (...)/cqtree or just through the gui for you fancy os users ;)**

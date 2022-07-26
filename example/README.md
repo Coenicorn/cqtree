@@ -14,11 +14,3 @@ To run (assuming you've built first):
 ```
 build/main.out
 ```
-
-**Note: To build there needs to be a directory "build" present in (...)/cqtree/example, this isn't included in github so you'll need to create that, either through running:**
-
-```
-mkdir build
-```
-
-**in dir (...)/cqtree/example or just through the gui for you fancy os users ;)**
