@@ -1,153 +1,181 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <qtree.h>
-#include <time.h>
+/*
+
+This is an example program for how one might use the quadtree implementation in the parent directory
+It is made with raylib, a free, open source game development graphics library (check it out at: https://raylib.com)
+
+Ennjoy!
+
+-Coenicorn
+
+*/
+
 #include <raylib.h>
+#include <qtree.h>
+#include <stdlib.h>
 
-// screen dimensions
-#define SCREENWIDTH 500
-#define SCREENHEIGHT 500
+// Window dimensions
+#define W_WIDTH 500
+#define W_HEGIHT 500
 
-// make this however big you want... if you dare ;)
-#define MAX_ENTITIES 100
+#define NUM_ENTITIES 5000
 
-#define MINWIDTH 10
-#define MAXWIDTH 30
-#define MINHEIGHT 10
-#define MAXHEIGHT 30
+// change this to see effect of qtree
+#define USEQTREE 1
 
-// helper function for random numbers
-float randrange(float a, float b)
-{
-	float diff = b - a;
-	return (a + (float)rand() / (float)RAND_MAX * (float)diff);
-}
-
-// example gameobject stuff to demonstrate the id
+// Entity struct
 typedef struct Entity
 {
-    AABB aabb;
-    Vector2 velocity;
-	Color color;
+    AABB bounds;
+    float velX, velY;
+    int isColliding;
 } Entity;
 
-// update function
-void update(QTree *q, Entity *objects)
+Entity *entities;
+
+float randrange(float a, float b)
 {
-    // update entities
-    for (int i = 0; i < MAX_ENTITIES; i++)
+    float diff = b - a;
+    return (a + (float)rand() / (float)RAND_MAX * diff);
+}
+
+void update(QTree *tree)
+{
+    for (int i = 0; i < NUM_ENTITIES; i++)
     {
-        Entity *e = &objects[i];
+        Entity *e = &entities[i];
 
         // update positions
-        e->aabb.x += e->velocity.x;
-        e->aabb.y += e->velocity.y;
+        e->bounds.x += e->velX;
+        e->bounds.y += e->velY;
 
         // collide with walls
-        if (e->aabb.x + e->aabb.w > SCREENWIDTH)
+        if (e->bounds.x + e->bounds.w > W_WIDTH)
         {
-            e->velocity.x *= -1;
-            e->aabb.x = SCREENWIDTH - e->aabb.w;
+            e->bounds.x = W_WIDTH - e->bounds.w;
+            e->velX *= -1;
         }
-        if (e->aabb.x < 0)
+        if (e->bounds.x < 0)
         {
-            e->velocity.x *= -1;
-            e->aabb.x = 0;
+            e->bounds.x = 0;
+            e->velX *= -1;
         }
-        if (e->aabb.y + e->aabb.h > SCREENHEIGHT)
+        if (e->bounds.y + e->bounds.h > W_HEGIHT)
         {
-            e->velocity.y *= -1;
-            e->aabb.y = SCREENHEIGHT - e->aabb.h;
+            e->bounds.y = W_HEGIHT - e->bounds.h;
+            e->velY *= -1;
         }
-        if (e->aabb.y < 0)
+        if (e->bounds.y < 0)
         {
-            e->velocity.y *= -1;
-            e->aabb.y = 0;
+            e->bounds.y = 0;
+            e->velY *= -1;
         }
     }
 
-    // check collisions
-    for (int i = 0; i < MAX_ENTITIES; i++)
+    for (int i = 0; i < NUM_ENTITIES; i++)
     {
-        Entity *e = &objects[i];
+        Entity *e = &entities[i];
 
-        if (e == NULL)
-            continue;
+        e->isColliding = 0;
 
-        e->color = GREEN;
+        if (USEQTREE){
+            int len = 0;
+            AABB *a[100];
 
-        AABB *overlapsWith[100];
-        int len = 0;
+            // query tree with aabb slightly larger than the entity to get all potential collision cases
+            QTreeQuery(tree, (AABB){e->bounds.x-5, e->bounds.y-5, e->bounds.w+10, e->bounds.h+10}, a, &len, 100);
 
-        QTreeQuery(q, e->aabb, overlapsWith, &len, 100);
+            for (int j = 0; j < len; j++)
+            {
+                // ID's save the day!
+                Entity *o = a[j]->id;
 
-        for (int i = 0; i < len; i++)
+                // check if the entity isn't colliding with itself
+                if (e == o)
+                    continue;
+                
+                // if it is a close collision, entity is colliding!
+                if (AABBoverlaps(&e->bounds, &o->bounds))
+                {
+                    e->isColliding = 1;
+                    break;
+                }
+            }
+        }
+        else
         {
-            // check if the entity isn't overlapping with itself
-            Entity *o = overlapsWith[i]->id;
+            for (int j = 0; j < NUM_ENTITIES; j++)
+            {
+                if (i == j)
+                    continue;
 
-            if (o != e)
-                e->color = RED;            
+                if (AABBoverlaps(&entities[i].bounds, &entities[j].bounds))
+                {
+                    e->isColliding = 1;
+                    break;
+                }
+            }
         }
     }
 }
 
 int main()
 {
-    // initialize random number generator
-    srand(time(NULL));
-
-    // initialize object array
-    Entity *objects = calloc(MAX_ENTITIES, sizeof(Entity));
-    for (int i = 0; i < MAX_ENTITIES; i++)
+    // Initialize entities array with aabb's with random positions
+    entities = calloc(NUM_ENTITIES, sizeof(Entity));
+    for (int i = 0; i < NUM_ENTITIES; i++)
     {
-        objects[i] = (Entity){
-            // choose some random values
-            (AABB){randrange(0, SCREENWIDTH), randrange(0, SCREENHEIGHT), randrange(MINWIDTH, MAXWIDTH), randrange(MINHEIGHT, MAXHEIGHT), &objects[i]},
-            (Vector2){randrange(-1, 1), randrange(-1, 1)},
-			GREEN
+        entities[i] = (Entity){
+            // Add pointer to the entity at the end for identification
+            (AABB){randrange(0, W_WIDTH), randrange(0, W_HEGIHT), 5, 5, &entities[i]},
+            // random velocities
+            randrange(-2, 2), randrange(-2, 2),
+            // Entity hasn't collided yet, isColliding = 0
+            0
         };
     }
 
-    InitWindow(SCREENWIDTH, SCREENHEIGHT, "Agent in C");
+    AABB QTreeBounds = {0, 0, W_WIDTH, W_HEGIHT};
+
+    // Initialize raylib window
+    InitWindow(W_WIDTH, W_HEGIHT, "Example usage of cqtree");
     SetTargetFPS(60);
 
     while (!WindowShouldClose())
     {
-        QTree *quadtree = newQTree((AABB){0, 0, 500, 500}, 10);
-
-        // build the QuadTree
-        for (int i = 0; i < MAX_ENTITIES; i++)
+        // build QTree
+        QTree *tree = newQTree(QTreeBounds, 10);
+        for (int i = 0; i < NUM_ENTITIES; i++)
         {
-            Entity *e = &objects[i];
-
-            QTreeAdd(quadtree, &e->aabb);
+            QTreeAdd(tree, &entities[i].bounds);
         }
 
-        update(quadtree, objects);
+        update(tree);
 
-        // VERY IMPORTANT, ALWAYS DO THIS!!!
-        freeQTree(quadtree);
+        freeQTree(tree);
 
+        // render entities
         BeginDrawing();
         ClearBackground(WHITE);
 
-        for (int i = 0; i < MAX_ENTITIES; i++)
+        for (int i = 0; i < NUM_ENTITIES; i++)
         {
-            Entity *e = &objects[i];
+            Entity *e = &entities[i];
 
-            DrawRectangle(e->aabb.x, e->aabb.y, e->aabb.w, e->aabb.h, e->color);
+            // entities that are colliding are green, those that are not are black
+            Color c = BLACK;
+            if (e->isColliding)
+                c = GREEN;
+            
+            DrawRectangle(e->bounds.x, e->bounds.y, e->bounds.w, e->bounds.h, c);
         }
-
-        DrawFPS(0, 0);
 
         EndDrawing();
     }
 
     CloseWindow();
 
-    // VERY IMPORTANT
-    free(objects);
+    // Every malloc/calloc should have a free call
+    free(entities);
 
     return 0;
 }

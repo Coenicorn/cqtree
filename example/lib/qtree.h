@@ -62,6 +62,7 @@ void freeQTree(QTree *q);
  * 
  * @param q QuadTree to add to
  * @param entry AABB to add
+ * 
  */
 void QTreeAdd(QTree *q, AABB *entry);
 
@@ -75,7 +76,9 @@ void QTreeAdd(QTree *q, AABB *entry);
  * @param maxLen The maximum amount of AABBs returned
  * 
  * @note When there are more overlapping AABBs than maxLen, the function will return, so for the sake of memory-safety
- * this function might not always return all overlapping AABBs
+ * this function might not always return all overlapping AABBs.
+ * @note When an AABB fits inside two quadrants, it gets added to both, so when you query, you sometimes get the same
+ * AABB two times, which I don't know how to fix without it being very slow
  */
 void QTreeQuery(QTree *q, AABB range, AABB *out[], int *l, int maxLen);
 
